@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Let\'s Bake</string>
+    <string name="error_message">Failed to load. Please try later!</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="favorite_recipe_pref">FAV</string>
+    <string name="intent_position">POSITION</string>
+    <string name="ingredient_label">Ingredients</string>
+    <string name="steps_label">Steps</string>
+    <string name="button_prev">PREVIOUS</string>
+    <string name="button_next">NEXT</string>
+</resources>

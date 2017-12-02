@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/layout_recipe_steps">
+
+    <fragment
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="0dp"
+        android:layout_weight="0.3"
+        android:layout_height="wrap_content"
+        android:id="@+id/detail_list_fragment"
+        android:name="com.shalu.letsbake.DetailListFragment"
+        />
+    <View
+        android:layout_width="@dimen/separator"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimaryLight" />
+
+    <FrameLayout android:layout_width="0dp" android:layout_height="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_weight="0.7"
+        android:id="@+id/step_container"/>
+</LinearLayout>
