@@ -25,15 +25,10 @@ public class RecipeStep extends AppCompatActivity {
                 stepIndex = getIntent().getIntExtra(getString(R.string.intent_position), 0);
             }
         }
-
-        RecipeStepFragment recipeStepFragment = new RecipeStepFragment();
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().add(R.id.step_container, recipeStepFragment).commit();
         if (savedInstanceState == null) {
-
-             fragmentManager.beginTransaction().add(R.id.step_container, recipeStepFragment).commit();
+            RecipeStepFragment recipeStepFragment = new RecipeStepFragment();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().add(R.id.step_container, recipeStepFragment).commit();
         }
-        else
-            fragmentManager.beginTransaction().replace(R.id.step_container, recipeStepFragment).commit();
-    }
+     }
 }

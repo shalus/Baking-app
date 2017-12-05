@@ -18,5 +18,5 @@
             android:textStyle="bold"
             android:layout_gravity="center"
             android:textColor="@android:color/black"
-            style="@style/Base.TextAppearance.AppCompat.Headline"/>
+            style="@style/Base.TextAppearance.AppCompat.Headline" />
 </LinearLayout>

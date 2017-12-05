@@ -1,10 +1,13 @@
 package com.shalu.letsbake;
 
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +32,8 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,9 +59,17 @@ public class RecipeStepFragment extends Fragment {
     Unbinder unbinder;
     int orientation;
     private static final String SELECTED_POSITION = "position";
-    private static long position;
+    private static final String RESUME_WINDOW = "window";
+    private static final String PLAYING = "playing";
+    private long position = C.TIME_UNSET;
+    private int resumeWindow = C.INDEX_UNSET;
+    private boolean isPlaying = false;
+
     Uri videoUri;
-    public RecipeStepFragment() {}
+    Uri thumbnailUri;
+    public RecipeStepFragment() {
+
+    }
 
     @Nullable
     @Override
@@ -64,18 +77,24 @@ public class RecipeStepFragment extends Fragment {
         View view = inflater.inflate(R.layout.recipe_step,container,false);
         unbinder = ButterKnife.bind(this, view);
         orientation = getResources().getConfiguration().orientation;
-        position = C.TIME_UNSET;
         if (savedInstanceState != null) {
             position = savedInstanceState.getLong(SELECTED_POSITION, C.TIME_UNSET);
+            resumeWindow = savedInstanceState.getInt(RESUME_WINDOW, C.INDEX_UNSET);
+            isPlaying = savedInstanceState.getBoolean(PLAYING, false);
         }
-        refreshViews();
+        else
+            Log.d("EXOPLAYER","lala");
+       // refreshViews();
         if(orientation != ORIENTATION_LANDSCAPE) {
             button_next.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     if (stepIndex < results[recipeIndex].steps.length)
                         stepIndex++;
-                    refreshViews();
+                        releasePlayer();
+                        resetPosition();
+                        refreshViews();
+
                 }
             });
             button_prev.setOnClickListener(new View.OnClickListener() {
@@ -83,7 +102,10 @@ public class RecipeStepFragment extends Fragment {
                 public void onClick(View view) {
                     if (stepIndex > 1)
                         stepIndex--;
-                    refreshViews();
+                        releasePlayer();
+                        resetPosition();
+                        refreshViews();
+
                 }
             });
         }
@@ -100,14 +122,20 @@ public class RecipeStepFragment extends Fragment {
             player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector, loadControl);
             // Prepare the MediaSource.
             userAgent = Util.getUserAgent(getContext(), "LetsBake");
-        }
 
-        mPlayerView.setPlayer(player);
-        MediaSource mediaSource = new ExtractorMediaSource(videoUri, new DefaultDataSourceFactory(
-                getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
-        player.prepare(mediaSource);
-        if (position != C.TIME_UNSET) player.seekTo(position);
-        player.setPlayWhenReady(true);
+            mPlayerView.setPlayer(player);
+            MediaSource mediaSource = new ExtractorMediaSource(videoUri, new DefaultDataSourceFactory(
+                    getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+            if (position != C.TIME_UNSET )//&& resumeWindow!= C.INDEX_UNSET)
+            {
+                player.seekTo(resumeWindow, position);
+                player.prepare(mediaSource, true, false);
+            }
+            else {
+                player.prepare(mediaSource, false, false);
+            }
+            player.setPlayWhenReady(isPlaying);
+        }
     }
 
 
@@ -124,48 +152,97 @@ public class RecipeStepFragment extends Fragment {
             description.setText(results[recipeIndex].steps[stepIndex].description);
         }
         videoUri = Uri.parse(results[recipeIndex].steps[stepIndex].videoURL);
-        if(videoUri==null || videoUri.equals(Uri.EMPTY)){
+        thumbnailUri = Uri.parse(results[recipeIndex].steps[stepIndex].thumbnailURL);
+        if((videoUri==null || videoUri.equals(Uri.EMPTY)) && (thumbnailUri==null || thumbnailUri.equals(Uri.EMPTY))){
             mPlayerView.setVisibility(View.INVISIBLE);
         }
-        else
-            mPlayerView.setVisibility(View.VISIBLE);
+        else if((videoUri == null || videoUri.equals(Uri.EMPTY)) && !thumbnailUri.equals(Uri.EMPTY)) {
+            Picasso.with(getContext())
+                    .load(thumbnailUri)
+                    .into(new Target() {
+                        @Override
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            mPlayerView.setDefaultArtwork(bitmap);
+                        }
 
+                        @Override
+                        public void onBitmapFailed(Drawable errorDrawable) {
+
+                        }
+
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+                        }
+                    });
+        }
+
+        else
+               mPlayerView.setVisibility(View.VISIBLE);
         preparePlayer(videoUri);
     }
 
     private void releasePlayer() {
-        player.stop();
-        player.release();
-        player = null;
+        if (player != null) {
+            saveState();
+            player.stop();
+            player.release();
+            player = null;
+        }
     }
 
-    @Override
+   @Override
     public void onResume() {
         super.onResume();
-        if (videoUri != null)
-                preparePlayer(videoUri);
+        if (player == null)
+                refreshViews();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong(SELECTED_POSITION, position);
+        outState.putInt(RESUME_WINDOW, resumeWindow);
+        outState.putBoolean(PLAYING, isPlaying);
 
+    }
+    private void saveState() {
+        if (player != null) {
+            resumeWindow = player.getCurrentWindowIndex();
+            position = player.isCurrentWindowSeekable()
+                    ? Math.max(0, player.getCurrentPosition())
+                    : C.TIME_UNSET;
+            isPlaying = player.getPlayWhenReady();
+        }
+    }
+    private void resetPosition() {
+        resumeWindow = C.INDEX_UNSET;
+        position = C.TIME_UNSET;
+        isPlaying = false;
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (player != null) {
-            position = player.getCurrentPosition();
-            releasePlayer();
-        }
+         releasePlayer();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+       // releasePlayer();
         unbinder.unbind();
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        releasePlayer();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        releasePlayer();
+    }
 }

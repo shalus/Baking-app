@@ -19,11 +19,13 @@ public class BakingJsonUtils {
     private static final String PARAM_INGREDIENT = "ingredient";
     private static final String PARAM_INGREDIENTS = "ingredients";
     private static final String PARAM_NAME = "name";
+    private static final String PARAM_IMAGE = "image";
     private static final String PARAM_STEPS = "steps";
     private static final String PARAM_SHORTDESC = "shortDescription";
     private static final String PARAM_DESC = "description";
     private static final String PARAM_VIDEO = "videoURL";
     private static final String PARAM_SERVING = "servings";
+    private static final String PARAM_THUMBNAIL = "thumbnailURL";
 
     public static Recipe[] results;
 
@@ -37,7 +39,8 @@ public class BakingJsonUtils {
 
             String name = recipe.getString(PARAM_NAME);
             String servings = recipe.getString(PARAM_SERVING);
-            results[i] = new Recipe(name, servings);
+            String image = recipe.getString(PARAM_IMAGE);
+            results[i] = new Recipe(name, servings, image);
 
             JSONArray ingredientsJsonArray = recipe.getJSONArray(PARAM_INGREDIENTS);
             Log.d(TAG, ingredientsJsonArray.length()+" ");
@@ -63,6 +66,7 @@ public class BakingJsonUtils {
                 results[i].steps[j].shortDescription = steps.getString(PARAM_SHORTDESC);
                 results[i].steps[j].description = steps.getString(PARAM_DESC);
                 results[i].steps[j].videoURL = steps.getString(PARAM_VIDEO);
+                results[i].steps[j].thumbnailURL = steps.getString(PARAM_THUMBNAIL);
             }
         }
         return;

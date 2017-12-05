@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,9 +33,11 @@ public class DetailListFragment extends Fragment {
 
 
     @BindView(R.id.tv_ingredient) TextView mIngredientText;
-    @BindView(R.id.list_view) ListView mListSteps;
+    @BindView(R.id.rv_steps) RecyclerView mRecyclerViewSteps;
     private Unbinder unbinder;
     private static final String STEP_INDEX = "step_index";
+    boolean isTablet;
+    LinearLayoutManager layoutManager;
 
 
         public DetailListFragment() {}
@@ -43,6 +47,7 @@ public class DetailListFragment extends Fragment {
     public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.recipe_detail, container);
         unbinder = ButterKnife.bind(this, view);
+        isTablet = getResources().getBoolean(R.bool.isTablet);
         String[] steps;
         String ingredient = "";
         if(results==null)
@@ -57,15 +62,20 @@ public class DetailListFragment extends Fragment {
         }
         mIngredientText.setText(ingredient);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.step, steps);
-        mListSteps.setAdapter(adapter);
+        //ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.step, steps);
+
+        layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+        mRecyclerViewSteps.setLayoutManager(layoutManager);
+        StepsAdapter adapter = new StepsAdapter(getContext());
+        mRecyclerViewSteps.setAdapter(adapter);
+        adapter.setmStepNames(steps);
         if(savedInstanceState!=null)
-            mListSteps.smoothScrollToPosition(savedInstanceState.getInt(STEP_INDEX));
-        mListSteps.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            mRecyclerViewSteps.smoothScrollToPosition(savedInstanceState.getInt(STEP_INDEX));
+       /* mListSteps.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                if(DetailActivity.twoPane == false) {
+                if(isTablet == false) {
                     Intent recipeStepIntent = new Intent(getContext(), RecipeStep.class);
                     recipeStepIntent.putExtra(getString(R.string.intent_position), i);
                     startActivity(recipeStepIntent);
@@ -77,7 +87,7 @@ public class DetailListFragment extends Fragment {
                     fragmentManager.beginTransaction().replace(R.id.step_container, iFragment).commit();
                 }
             }
-        });
+        });*/
         return view;
     }
 
@@ -90,6 +100,6 @@ public class DetailListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STEP_INDEX,mListSteps.getFirstVisiblePosition());
+        outState.putInt(STEP_INDEX,layoutManager.findFirstCompletelyVisibleItemPosition());
     }
 }

@@ -8,10 +8,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.shalu.letsbake.utils.NetworkUtils;
+import com.squareup.picasso.Picasso;
+
 import java.net.URL;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static com.shalu.letsbake.utils.BakingJsonUtils.results;
 
 /**
  * Created by sarum on 11/12/2017.
@@ -20,6 +24,7 @@ import butterknife.ButterKnife;
 public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemViewHolder> {
 
     String mRecipeNames[];
+    String mImg[];
     OnRecipeClickListener mCallback;
 
     public interface OnRecipeClickListener {
@@ -44,12 +49,32 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemVi
     public void onBindViewHolder(ItemViewHolder holder, int position) {
         URL url = NetworkUtils.buildUrl();
         holder.mRecipieName.setText(mRecipeNames[position]);
-        switch(position) {
-            case 0: {holder.mImg.setImageResource(R.drawable.nutella_pie);break;}
-            case 1: {holder.mImg.setImageResource(R.drawable.brownies);break;}
-            case 2: {holder.mImg.setImageResource(R.drawable.yellow_cake1);break;}
-            case 3: {holder.mImg.setImageResource(R.drawable.cheese_cake);break;}
+        if(mImg[position]==null || mImg[position].equals("")) {
+            switch (position) {
+                case 0: {
+                    holder.mImg.setImageResource(R.drawable.nutella_pie);
+                    break;
+                }
+                case 1: {
+                    holder.mImg.setImageResource(R.drawable.brownies);
+                    break;
+                }
+                case 2: {
+                    holder.mImg.setImageResource(R.drawable.yellow_cake1);
+                    break;
+                }
+                case 3: {
+                    holder.mImg.setImageResource(R.drawable.cheese_cake);
+                    break;
+                }
+            }
         }
+        else {
+            Picasso.with(holder.mImg.getContext())
+                    .load(mImg[position].toString())
+                    .into(holder.mImg);
+        }
+
 
     }
 
@@ -61,8 +86,13 @@ public class ItemListAdapter extends RecyclerView.Adapter<ItemListAdapter.ItemVi
             return 0;
     }
 
-    public void setmRecipeNames(String[] names) {
-        mRecipeNames = names;
+    public void setmRecipeDetails() {
+        mRecipeNames = new String[results.length];
+        mImg = new String[results.length];
+        for(int i = 0; i < results.length; i++) {
+            mRecipeNames[i] = results[i].name;
+            mImg[i] = results[i].image;
+        }
         notifyDataSetChanged();
     }
 
